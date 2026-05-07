@@ -1,4 +1,4 @@
-# ZwickyBox4Writing
+# Zwicky Box for generating story plots
 Zwicky Box records five characters across various settings, objects, crises, and actions to develop story plots.
 After 5 characters are recorded, the program rolls a dice to select a particular character, setting, etc. randomly. 
 The user can accept it or keep rolling a dice to see the other options. Once your preferred story plot is shown. 
