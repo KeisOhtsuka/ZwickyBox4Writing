@@ -12,7 +12,7 @@ Creative Commons CC BY NC SA 4.0    Keis Ohtuka (c) 2026
 
 zwicky_box.py (Python 3.14 code)\
 zwicky_app.py (Streamlit web application production code)\
-zwicky_box.exe (Windows 11 executable program incorporating Python runtime included)\
+zwicky_box.exe (Windows 11 executable program incorporating Python runtime included) \
 
 ---------------------------------------------------------------------------------\
  Zwicky Box for generating story plots (Web application) on Streamlit\
