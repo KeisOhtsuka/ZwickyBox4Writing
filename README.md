@@ -7,14 +7,17 @@ The program shows other randomly generated scenarios without using the same toke
 for the next draw at a time. If you have generated random plots, the user can record them in the report after the Zwicky Box
 and their preferred plot.
 
-Creative Commons Attribute and acknowledge the Author, Non-commercial use only, distribute in similar form.
+Creative Commons Attribute and acknowledge the Author, Non-commercial use only, distribute in similar form\
 Creative Commons CC BY NC SA 4.0    Keis Ohtuka (c) 2026
 
-zwicky_box.py (Python 3.14 code).
-zwicky_app.py (Streamlit web application production code).
-zwicky_box.exe (Windows 11 executable program incorporating Python runtime included).
+zwicky_box.py (Python 3.14 code)
+
+zwicky_app.py (Streamlit web application production code)
+
+zwicky_box.exe (Windows 11 executable program incorporating Python runtime included)
 
 #---------------------------------------------------------------------------------
+
  Zwicky Box for generating story plots (Web application) on Streamlit
  click 
  https://zwickyboxstorygenerator1-keisohtsuka.streamlit.app/
