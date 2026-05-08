@@ -1,4 +1,4 @@
-# Zwicky Box for generating story
+# Zwicky Box for generating story plots
 Zwicky Box records five characters across various settings, objects, crises, and actions to develop story plots.
 After five characters are recorded, the program rolls a die to randomly select a particular character, setting, etc. 
 The user can accept it or keep rolling a dice to see the other options. Once your preferred story plot is shown. 
@@ -9,3 +9,7 @@ and their preferred plot.
 
 Creative Commons Attribute and acknowledge the Author, Non-commercial use only, distribute in similar form.
 Creative Commons CC BY NC SA 4.0    Keis Ohtuka (c) 2026
+
+zwicky_box.py (Python 3.14 code)
+zwicky_app.py (Streamlit web application production code)
+zwicky_app.exe (Windows 11 executable program incorporating Python runtime included).
