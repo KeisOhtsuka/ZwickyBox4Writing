@@ -10,8 +10,16 @@ and their preferred plot.
 Creative Commons Attribute and acknowledge the Author, Non-commercial use only, distribute in similar form\
 Creative Commons CC BY NC SA 4.0    Keis Ohtuka (c) 2026
 
+# Simplest way to run\
+1. Download or distribute the JavaScript .html file, ZwickyBoxDelux.html\
+Students can save it on their computer and run it locally without an Internet connection.\
+Results will be saved on their computer.\
+Alternatively,\
+2. Zwicky Box for generating story plots (Web application) on Streamlit\
+ click https://zwickyboxstorygenerator1-keisohtsuka.streamlit.app/
+
 **For Developers**\
-Gamified_Zwicky_Box.R (R code Paste it in RStudio Console Window Select All (Ctrl-A) then Run)\
+Gamified_Zwicky_Box.R (R code Paste it in RStudio Console Window, Select All (Ctrl-A) then click Run)\
 zwicky_box.py (Python 3.14 code)\
 zwicky_app.py (Streamlit web application production code)\
 ******For Windows Runtime **********\
