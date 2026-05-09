@@ -14,7 +14,7 @@ Creative Commons CC BY NC SA 4.0    Keis Ohtuka (c) 2026
 1. Download or distribute the JavaScript .html file, ZwickyBoxDelux.html\
 Students can save it on their computer and run it locally without an Internet connection.\
 Results will be saved on their computer.\
-Alternatively,\
+Alternatively,
 2. Zwicky Box for generating story plots (Web application) on Streamlit\
  click https://zwickyboxstorygenerator1-keisohtsuka.streamlit.app/
 
