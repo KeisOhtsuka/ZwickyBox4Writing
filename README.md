@@ -13,7 +13,7 @@ Creative Commons CC BY NC SA 4.0    Keis Ohtuka (c) 2026
 **For Developers**
 zwicky_box.py (Python 3.14 code)\
 zwicky_app.py (Streamlit web application production code)\
-**For Windows Runtime ***
+******For Windows Runtime **********\
 zwicky_box.exe (Windows 11 executable program incorporating Python runtime included) \
 
 ---------------------------------------------------------------------------------\
