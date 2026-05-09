@@ -11,7 +11,7 @@ Creative Commons Attribute and acknowledge the Author, Non-commercial use only, 
 Creative Commons CC BY NC SA 4.0    Keis Ohtuka (c) 2026
 
 # Simplest way to run
-1. Download or distribute the JavaScript .html file, ZwickyBoxDelux.html\
+1. Download or distribute the JavaScript .html file, Gamified_ZwickyBox.html\
 Students can save it on their computer and run it locally without an Internet connection.\
 Results will be saved on their computer.\
 Alternatively,
