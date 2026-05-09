@@ -18,6 +18,7 @@ import webbrowser
 # Developed with the support of Google Gemini Pro, this script also demonstrates how AI can assist in creating engaging educational tools that foster creativity and critical thinking skills in students. Enjoy crafting your stories with the Zwicky Box Story Generator!
 # Note: This script is provided as-is and may require adjustments based on specific classroom needs or Python environment configurations. Always test the script in your environment before using it in a classroom setting.
 # Licenses: Creative Commons Attribution Non-Commercial Use ShareAlike 4.0 International License (CC BY NC-SA 4.0)
+# (c) Keis Ohtsuka 2026
 # For any questions or issues, please contact the developer, Keis.Ohtsuka@gmail.com, or refer to the documentation for Python 3.14 and the Google Gemini Pro API.
 
 def main():
