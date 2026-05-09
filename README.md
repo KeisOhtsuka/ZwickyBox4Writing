@@ -11,6 +11,7 @@ Creative Commons Attribute and acknowledge the Author, Non-commercial use only, 
 Creative Commons CC BY NC SA 4.0    Keis Ohtuka (c) 2026
 
 **For Developers**\
+Gamified_Zwicky_Box.R (R code Paste it in RStudio Console Window Select All (Ctrl-A) then Run)\
 zwicky_box.py (Python 3.14 code)\
 zwicky_app.py (Streamlit web application production code)\
 ******For Windows Runtime **********\
