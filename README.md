@@ -8,7 +8,7 @@ for the next draw at a time. If you have generated random plots, the user can re
 and their preferred plot.
 
 Creative Commons Attribute and acknowledge the Author, Non-commercial use only, distribute in similar form\
-Creative Commons CC BY NC SA 4.0    Keis Ohtuka (c) 2026
+Creative Commons CC BY NC SA 4.0    Keis Ohtsuka (c) 2026
 
 # Simplest way to run
 1. Download or distribute the JavaScript .html file, Gamified_ZwickyBox.html\
@@ -22,9 +22,7 @@ Alternatively,
 Gamified_Zwicky_Box.R (R code Paste it in RStudio Console Window, Select All (Ctrl-A) then click Run)\
 zwicky_box.py (Python 3.14 code)\
 zwicky_app.py (Streamlit web application production code)\
-******For Windows Runtime **********\
+**For Windows Runtime **\
 zwicky_box.exe (Windows 11 executable program incorporating Python runtime included) \
 
----------------------------------------------------------------------------------\
- Zwicky Box for generating story plots (Web application) on Streamlit\
- click https://zwickyboxstorygenerator1-keisohtsuka.streamlit.app/
+Any feedback to Keis.Ohtsuka@gmail.com
