@@ -13,14 +13,12 @@ st.markdown("*Creative Commons Attribution NonCommercial ShareAlike licence: CC 
 st.divider()
 
 # --- STATE MANAGEMENT ---
-# This keeps track of the "Game" as the user clicks buttons
 if 'phase' not in st.session_state:
-    st.session_state.phase = 'input'  # Can be 'input', 'rolling', or 'results'
+    st.session_state.phase = 'input'  
+if 'matrix_data' not in st.session_state:
+    st.session_state.matrix_data = [] # Holds the completed rows securely
 if 'matrix' not in st.session_state:
-    st.session_state.matrix = pd.DataFrame(
-        [["", "", "", "", ""] for _ in range(5)],
-        columns=['Character(s)', 'Setting', 'Objects', 'Crisis', 'Action']
-    )
+    st.session_state.matrix = None # Will hold the final Pandas DataFrame
 if 'student_scenario' not in st.session_state:
     st.session_state.student_scenario = []
 if 'remaining_columns' not in st.session_state:
@@ -34,23 +32,50 @@ if 'rejected_items' not in st.session_state:
 if 'current_roll' not in st.session_state:
     st.session_state.current_roll = None
 
-# --- PHASE 1: THE MATRIX INPUT ---
+columns_list = ['Character(s)', 'Setting', 'Objects', 'Crisis', 'Action']
+
+# --- PHASE 1: THE ROW-BY-ROW INPUT ---
 if st.session_state.phase == 'input':
     st.subheader("1. Build Your Matrix")
-    st.write("Fill out the 5x5 grid below with your story elements.")
+    st.write("Fill out your story elements **one row at a time**.")
 
-    edited_df = st.data_editor(st.session_state.matrix, use_container_width=True, hide_index=True)
-    
-    # Save edits to state
-    st.session_state.matrix = edited_df
+    # Display the current progress as a safe, read-only table
+    display_data = st.session_state.matrix_data + [["", "", "", "", ""] for _ in range(5 - len(st.session_state.matrix_data))]
+    st.dataframe(pd.DataFrame(display_data, columns=columns_list), use_container_width=True, hide_index=True)
 
-    is_filled = not edited_df.replace("", pd.NA).isna().values.any()
+    # If they haven't finished all 5 rows, show the input form for the current row
+    if len(st.session_state.matrix_data) < 5:
+        current_row_num = len(st.session_state.matrix_data) + 1
+        st.markdown(f"### 📝 Entering Data for Row {current_row_num}")
+        
+        # We use a form so it doesn't refresh until they click the button
+        with st.form(key=f"row_form_{current_row_num}"):
+            col1, col2, col3, col4, col5 = st.columns(5)
+            val1 = col1.text_input("Character(s)")
+            val2 = col2.text_input("Setting")
+            val3 = col3.text_input("Objects")
+            val4 = col4.text_input("Crisis")
+            val5 = col5.text_input("Action")
 
-    if is_filled:
+            submit_btn = st.form_submit_button(f"Save Row {current_row_num}")
+
+            if submit_btn:
+                # Ensure they didn't leave any blanks
+                if all(v.strip() for v in [val1, val2, val3, val4, val5]):
+                    st.session_state.matrix_data.append([val1, val2, val3, val4, val5])
+                    st.rerun() # Refresh the page to show the new row
+                else:
+                    st.error("⚠️ Please fill in all 5 columns before saving.")
+                    
+    # If all 5 rows are done, lock it in!
+    else:
         st.success("Matrix complete! Ready to build your scenario.")
         if st.button("🎲 Lock Matrix & Start Dice Roll!", type="primary"):
+            # Convert the safe list data into the final DataFrame for the rest of the app
+            st.session_state.matrix = pd.DataFrame(st.session_state.matrix_data, columns=columns_list)
             st.session_state.phase = 'rolling'
             st.rerun()
+
 
 # --- PHASE 2: THE GAMIFIED DICE ROLL ---
 elif st.session_state.phase == 'rolling':
@@ -61,16 +86,13 @@ elif st.session_state.phase == 'rolling':
     st.subheader(f"2. Build Your Custom Scenario")
     st.progress((st.session_state.current_col_idx) / 5)
     
-    # Initialize the pool for the current column if empty
     if not st.session_state.available_items and st.session_state.current_roll is None:
         pool = df[current_col_name].tolist()
         random.shuffle(pool)
         st.session_state.available_items = pool
         st.session_state.rejected_items = []
 
-    # Logic for drawing the next item
     if st.session_state.current_roll is None:
-        # If only one item is left, auto-lock it
         if len(st.session_state.available_items) == 1:
             forced_item = st.session_state.available_items.pop(0)
             st.session_state.student_scenario.append(forced_item)
@@ -82,10 +104,8 @@ elif st.session_state.phase == 'rolling':
                 st.session_state.phase = 'results'
             st.rerun()
         else:
-            # Draw the next item
             st.session_state.current_roll = st.session_state.available_items.pop(0)
 
-    # --- The UI for the current roll ---
     if st.session_state.current_roll is not None:
         st.info(f"### Rolling for: {current_col_name.upper()}")
         st.markdown(f"## 🎲 Rolled: **{st.session_state.current_roll}**")
@@ -94,13 +114,10 @@ elif st.session_state.phase == 'rolling':
         
         with col1:
             if st.button("✅ Keep This", use_container_width=True, type="primary"):
-                # Save to student scenario
                 st.session_state.student_scenario.append(st.session_state.current_roll)
-                # Save unused items (available + rejected) for later
                 leftovers = st.session_state.available_items + st.session_state.rejected_items
                 st.session_state.remaining_columns.append(leftovers)
                 
-                # Move to next column
                 st.session_state.current_col_idx += 1
                 st.session_state.current_roll = None
                 st.session_state.available_items = [] 
@@ -128,9 +145,7 @@ elif st.session_state.phase == 'results':
     
     columns = st.session_state.matrix.columns.tolist()
     
-    # Generate the other 4 core cases
     if 'core_df' not in st.session_state:
-        # Shuffle remaining columns
         for col in st.session_state.remaining_columns:
             random.shuffle(col)
             
@@ -144,7 +159,6 @@ elif st.session_state.phase == 'results':
     st.subheader("The 5 Core Scenarios (Without Replacement)")
     st.write("Plot 1 is your locked-in scenario. Plots 2-5 were built using the remaining elements from your matrix.")
     
-    # Highlight the first row using Pandas Styler
     def highlight_first_row(s):
         return ['background-color: #d4efdf' if s.name == 0 else '' for _ in s]
     
@@ -198,7 +212,7 @@ elif st.session_state.phase == 'results':
             mime="text/csv"
         )
         
-    # Reset button to let them start a completely new matrix
+    # Reset button 
     st.divider()
     if st.button("Reset Everything & Start Over"):
         st.session_state.clear()
