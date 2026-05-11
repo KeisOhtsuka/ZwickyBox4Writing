@@ -151,6 +151,13 @@ elif st.session_state.phase == 'results':
     
     columns = st.session_state.matrix.columns.tolist()
     
+    # === NEW: Display the Original Matrix ===
+    st.subheader("Your Original Zwicky Matrix")
+    st.write("This foundational grid contains all the elements used to generate the scenarios below.")
+    st.dataframe(st.session_state.matrix, use_container_width=True, hide_index=True)
+    st.divider()
+    # ========================================
+
     if 'core_df' not in st.session_state:
         for col in st.session_state.remaining_columns:
             random.shuffle(col)
@@ -199,6 +206,9 @@ elif st.session_state.phase == 'results':
         writer.writerow(["# ZWICKY BOX STORY GENERATOR (Classroom Edition)"])
         writer.writerow(["# developed by Keis Ohtsuka (c) 2026 using Google Gemini Pro."])
         writer.writerow([])
+        writer.writerow(["# ORIGINAL ZWICKY MATRIX"])
+        st.session_state.matrix.to_csv(csv_buffer, index=False)
+        writer.writerow([])
         writer.writerow(["# THE 5 CORE SCENARIOS (Without Replacement)"])
         st.session_state.core_df.to_csv(csv_buffer, index=False)
         writer.writerow([])
@@ -212,6 +222,8 @@ elif st.session_state.phase == 'results':
         </head><body onload="window.print()">
         <h2>Zwicky Box Story Generator - Results</h2>
         <p><i>Developed by Keis Ohtsuka (c) 2026</i></p>
+        <h3>Original Zwicky Matrix</h3>
+        {st.session_state.matrix.to_html(index=False)}
         <h3>Core Scenarios</h3>
         {st.session_state.core_df.to_html(index=False)}
         <h3>Random Scenarios</h3>
