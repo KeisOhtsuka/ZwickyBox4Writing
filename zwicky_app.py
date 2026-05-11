@@ -34,19 +34,15 @@ if 'current_roll' not in st.session_state:
 
 columns_list = ['Character(s)', 'Setting', 'Objects', 'Crisis', 'Action']
 
-# --- PHASE 1: THE ROW-BY-ROW INPUT ---
+# --- PHASE 1: THE ROW-BY-ROW INPUT (TOP-DOWN LAYOUT) ---
 if st.session_state.phase == 'input':
     st.subheader("1. Build Your Matrix")
-    st.write("Fill out your story elements **one row at a time**.")
+    st.write("Type your story elements into the boxes below. They will appear in the table once you save the row.")
 
-    # Display the current progress as a safe, read-only table
-    display_data = st.session_state.matrix_data + [["", "", "", "", ""] for _ in range(5 - len(st.session_state.matrix_data))]
-    st.dataframe(pd.DataFrame(display_data, columns=columns_list), use_container_width=True, hide_index=True)
-
-    # If they haven't finished all 5 rows, show the input form for the current row
+    # 1. Show the Input Form FIRST (if they haven't finished 5 rows)
     if len(st.session_state.matrix_data) < 5:
         current_row_num = len(st.session_state.matrix_data) + 1
-        st.markdown(f"### 📝 Entering Data for Row {current_row_num}")
+        st.markdown(f"<h3 style='color: #0d47a1;'>📝 Entering Data for Row {current_row_num}</h3>", unsafe_allow_html=True)
         
         # We use a form so it doesn't refresh until they click the button
         with st.form(key=f"row_form_{current_row_num}"):
@@ -63,18 +59,29 @@ if st.session_state.phase == 'input':
                 # Ensure they didn't leave any blanks
                 if all(v.strip() for v in [val1, val2, val3, val4, val5]):
                     st.session_state.matrix_data.append([val1, val2, val3, val4, val5])
-                    st.rerun() # Refresh the page to show the new row
+                    st.rerun() # Refresh the page to update the table
                 else:
                     st.error("⚠️ Please fill in all 5 columns before saving.")
                     
-    # If all 5 rows are done, lock it in!
+    # 2. Show the "Start Game" button if they ARE finished
     else:
         st.success("Matrix complete! Ready to build your scenario.")
-        if st.button("🎲 Lock Matrix & Start Dice Roll!", type="primary"):
+        if st.button("🎲 Lock Matrix & Start Dice Roll!", type="primary", use_container_width=True):
             # Convert the safe list data into the final DataFrame for the rest of the app
             st.session_state.matrix = pd.DataFrame(st.session_state.matrix_data, columns=columns_list)
             st.session_state.phase = 'rolling'
             st.rerun()
+
+    # 3. Display the Table AFTER the form (acting as a live preview)
+    st.markdown("### 📊 Matrix Preview")
+    display_data = st.session_state.matrix_data + [["", "", "", "", ""] for _ in range(5 - len(st.session_state.matrix_data))]
+    
+    # Optional styling to highlight completed rows
+    df_display = pd.DataFrame(display_data, columns=columns_list)
+    def highlight_filled(s):
+        return ['background-color: #f8f9fa' if v == "" else 'background-color: #d4efdf' for v in s]
+    
+    st.dataframe(df_display.style.apply(highlight_filled, axis=1), use_container_width=True, hide_index=True)
 
 
 # --- PHASE 2: THE GAMIFIED DICE ROLL ---
