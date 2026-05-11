@@ -94,14 +94,22 @@
             </div>
         </div>
 
-        <!-- PHASE 4: EXPORT / PRINT / RESET -->
+    <!-- PHASE 4: EXPORT / PRINT / RESET / QUIT -->
         <div id="exportPhase" class="no-print hidden" style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #eee; text-align: center;">
             <h3 style="color: #2c3e50;">Save Your Work</h3>
             <button class="btn-success" onclick="downloadCSV()">📥 Download Results as CSV</button>
             <button onclick="window.print()">🖨️ Print to PDF</button>
             <br><br>
             <button class="btn-warning" onclick="location.reload()">🔄 Start Over</button>
+            <button style="background: #6c757d; color: white;" onclick="quitApp()">🚪 Quit</button>
         </div>
+    </div>
+
+    <!-- QUIT SCREEN (Hidden by default) -->
+    <div id="quitScreen" class="panel hidden no-print" style="text-align: center; margin-top: 50px;">
+        <h2 style="color: #2c3e50;">Goodbye! 👋</h2>
+        <p style="font-size: 18px;">Thank you for using the Zwicky Box Story Generator.</p>
+        <p style="color: #7f8c8d;">Your session has ended. You can now safely close this browser tab.</p>
     </div>
 
     <script>
