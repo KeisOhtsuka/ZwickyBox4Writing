@@ -224,7 +224,7 @@ elif st.session_state.phase == 'results':
             if st.button("🚪 Quit", type="primary", use_container_width=True):
                 st.session_state.phase = 'quit'
                 st.rerun()
-        
+        )
         
     # Reset button 
     st.divider()
@@ -244,4 +244,4 @@ elif st.session_state.phase == 'results':
     col1, col2, col3 = st.columns([1, 1, 1])
     with col2:
         if st.button("Wait, take me back! (Start Over)", use_container_width=True):
-            st.rerun()
+            st.rerun() 
