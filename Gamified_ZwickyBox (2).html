@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zwicky Box Story Generator</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: 20px auto; padding: 20px; color: #333; line-height: 1.6; }
+        h1 { color: #2c3e50; margin-bottom: 5px; }
+        .credits { font-size: 13px; color: #7f8c8d; font-style: italic; margin-bottom: 30px; }
+        .panel { background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #dee2e6; margin-bottom: 20px; }
+        
+        /* Table Styles */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; background: white; font-size: 14px; }
+        th, td { border: 1px solid #ced4da; padding: 10px; text-align: left; width: 20%; word-wrap: break-word; }
+        th { background-color: #e9ecef; }
+        
+        /* Input Form Styles */
+        .input-row-container { background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #90caf9; }
+        .input-flex { display: flex; gap: 10px; margin-bottom: 15px; }
+        .input-flex input { flex: 1; padding: 10px; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; }
+        .active-table-row { background-color: #fff3cd !important; }
+        
+        /* Buttons */
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; margin: 5px; }
+        button:hover { background: #0056b3; }
+        .btn-success { background: #28a745; }
+        .btn-success:hover { background: #218838; }
+        .btn-warning { background: #ffc107; color: black; }
+        .btn-warning:hover { background: #e0a800; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-secondary { background: #6c757d; }
+        .btn-secondary:hover { background: #5a6268; }
+        
+        .hidden { display: none !important; }
+        .dice-roll-box { text-align: center; padding: 30px; background: #e3f2fd; border: 2px dashed #90caf9; border-radius: 10px; }
+        .dice-result { font-size: 24px; font-weight: bold; color: #1565c0; margin: 20px 0; }
+        .custom-row { background-color: #d4efdf !important; border: 2px solid #27ae60; }
+        
+        @media print { 
+            .no-print { display: none !important; } 
+            body { margin: 0; } 
+            table { page-break-inside: auto; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🎲 Zwicky Box Story Generator</h1>
+    <div class="credits">
+        Developed by Keis Ohtsuka (c) 2026 using Google Gemini Pro.<br>
+        Creative Commons Attribution NonCommercial ShareAlike licence: CC BY NC SA 4.0
+    </div>
+
+    <!-- PHASE 1: INPUT -->
+    <div id="inputPhase" class="panel no-print">
+        <h2>1. Build Your Matrix</h2>
+        <p>Type your story elements into the boxes below. They will appear in the table as you type.</p>
+
+        <!-- The Top Entry Form -->
+        <div id="entryForm" class="input-row-container">
+            <h3 id="rowHeader" style="margin-top: 0; color: #0d47a1;">📝 Entering Data for Row 1</h3>
+            <div class="input-flex">
+                <input type="text" id="input_0" placeholder="Character(s)" oninput="updateTableLive(0)">
+                <input type="text" id="input_1" placeholder="Setting" oninput="updateTableLive(1)">
+                <input type="text" id="input_2" placeholder="Objects" oninput="updateTableLive(2)">
+                <input type="text" id="input_3" placeholder="Crisis" oninput="updateTableLive(3)">
+                <input type="text" id="input_4" placeholder="Action" oninput="updateTableLive(4)">
+            </div>
+            <button class="btn-success" onclick="saveRow()">💾 Save Row</button>
+            <span id="rowErrorMsg" style="color: red; font-weight: bold; margin-left: 15px;" class="hidden">⚠️ Please fill in all 5 boxes!</span>
+        </div>
+
+        <!-- The Live Preview Table -->
+        <table id="matrixTable">
+            <thead>
+                <tr>
+                    <th>Character(s)</th><th>Setting</th><th>Objects</th><th>Crisis</th><th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="matrixBody">
+                <!-- JavaScript will inject the 5 blank rows here -->
+            </tbody>
+        </table>
+        
+        <div style="text-align: center;">
+            <button id="startRollBtn" class="hidden" style="font-size: 18px; padding: 15px 30px;" onclick="startDiceRoll()">🎲 Lock Matrix & Start Dice Roll</button>
+        </div>
+    </div>
+
+    <!-- PHASE 2: DICE ROLL -->
+    <div id="rollPhase" class="panel hidden no-print">
+        <h2>2. Build Your Custom Scenario</h2>
+        <p>Rolling for: <strong id="currentColLabel"></strong></p>
+        
+        <div class="dice-roll-box">
+            <div id="autoLockMsg" class="hidden" style="color: #d35400; font-weight: bold; margin-bottom: 10px;">
+                ⚠️ Last option remaining! Auto-locking...
+            </div>
+            <div class="dice-result" id="rolledItem">???</div>
+            <div id="rollButtons">
+                <button class="btn-success" onclick="keepItem()">✅ Keep This</button>
+                <button class="btn-warning" onclick="rollAgain()">🔄 Roll Again</button>
+            </div>
+        </div>
+        
+        <h3 style="margin-top: 30px;">Your Story So Far:</h3>
+        <p id="storySoFar" style="font-size: 18px; font-weight: bold; color: #2c3e50;">(Nothing locked in yet)</p>
+    </div>
+
+    <!-- PHASE 3: RESULTS & INFINITE EXPLORER -->
+    <div id="resultsPhase" class="hidden">
+        <h2 style="color: #27ae60;">🎉 Your Custom Scenario is Complete!</h2>
+        
+        <h3>The 5 Core Scenarios (Without Replacement)</h3>
+        <p class="no-print">Plot 1 is your custom locked-in scenario. Plots 2-5 use the remaining elements.</p>
+        <div id="coreTables"></div>
+
+        <div id="explorerSection" style="margin-top: 40px;">
+            <h3>Explore Random Scenarios (With Replacement)</h3>
+            <div id="randomTablesContainer"></div>
+            
+            <div id="exploreControls" class="no-print" style="margin-top: 20px; text-align: center; background: #fff3cd; padding: 20px; border-radius: 8px;">
+                <p>Do you want to see more randomly generated plots?</p>
+                <button onclick="generateRandomScenarios()">✨ Generate 20 More</button>
+                <button class="btn-danger" onclick="finishExploring()">🛑 No, Done Exploring</button>
+            </div>
+        </div>
+
+        <!-- PHASE 4: EXPORT / PRINT / RESET / QUIT -->
+        <div id="exportPhase" class="no-print hidden" style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #eee; text-align: center;">
+            <h3 style="color: #2c3e50;">Save Your Work</h3>
+            <button class="btn-success" onclick="downloadCSV()">📥 Download Results as CSV</button>
+            <button onclick="window.print()">🖨️ Print to PDF</button>
+            <br><br>
+            <button class="btn-warning" onclick="location.reload()">🔄 Start Over</button>
+            <button class="btn-secondary" onclick="quitApp()">🚪 Quit</button>
+        </div>
+    </div>
+
+    <!-- QUIT SCREEN -->
+    <div id="quitScreen" class="panel hidden no-print" style="text-align: center; margin-top: 50px;">
+        <h2 style="color: #2c3e50;">Goodbye! 👋</h2>
+        <p style="font-size: 18px;">Thank you for using the Zwicky Box Story Generator.</p>
+        <p style="color: #7f8c8d;">Your session has ended. You can now safely close this browser tab.</p>
+    </div>
+
+    <script>
+        const columns = ['Character(s)', 'Setting', 'Objects', 'Crisis', 'Action'];
+        let matrixData = [[], [], [], [], []]; 
+        
+        // Input Phase State
+        let currentRowIdx = 0;
+        
+        // Game State
+        let studentScenario = [];
+        let remainingColumns = [[], [], [], [], []];
+        let currentColIdx = 0;
+        let currentPool = [];
+        let rejectedItems = [];
+        let currentItem = "";
+        
+        // Explorer State
+        let randomScenarios = [];
+
+        // Initialize Blank Table
+        window.onload = () => {
+            const tbody = document.getElementById("matrixBody");
+            for(let r=0; r<5; r++) {
+                let tr = document.createElement("tr");
+                tr.id = `row_${r}`;
+                for(let c=0; c<5; c++) {
+                    tr.innerHTML += `<td id="cell_${c}_${r}"></td>`;
+                }
+                tbody.appendChild(tr);
+            }
+            highlightActiveRow();
+            document.getElementById("input_0").focus(); // Put cursor in first box
+        };
+
+        // UI: Highlight the row they are currently typing in
+        function highlightActiveRow() {
+            for(let r=0; r<5; r++) {
+                let rowElement = document.getElementById(`row_${r}`);
+                if (r === currentRowIdx) {
+                    rowElement.classList.add("active-table-row");
+                } else {
+                    rowElement.classList.remove("active-table-row");
+                }
+            }
+        }
+
+        // Live Binding: Typing in the box instantly updates the table cell
+        function updateTableLive(colIdx) {
+            if (currentRowIdx < 5) {
+                const val = document.getElementById(`input_${colIdx}`).value;
+                document.getElementById(`cell_${colIdx}_${currentRowIdx}`).innerText = val;
+            }
+        }
+
+        // Save the active row
+        function saveRow() {
+            // Check for blanks
+            let allFilled = true;
+            let rowValues = [];
+            for(let c=0; c<5; c++) {
+                let val = document.getElementById(`input_${c}`).value.trim();
+                if(val === "") allFilled = false;
+                rowValues.push(val);
+            }
+
+            if(!allFilled) {
+                document.getElementById("rowErrorMsg").classList.remove("hidden");
+                return;
+            }
+            
+            document.getElementById("rowErrorMsg").classList.add("hidden");
+
+            // Save data permanently to the matrix variable
+            for(let c=0; c<5; c++) {
+                matrixData[c][currentRowIdx] = rowValues[c];
+            }
+
+            currentRowIdx++;
+
+            // Check if we are done with all 5 rows
+            if (currentRowIdx < 5) {
+                // Clear the form for the next row
+                for(let c=0; c<5; c++) {
+                    document.getElementById(`input_${c}`).value = "";
+                }
+                document.getElementById("rowHeader").innerText = `📝 Entering Data for Row ${currentRowIdx + 1}`;
+                highlightActiveRow();
+                document.getElementById("input_0").focus();
+            } else {
+                // Done! Hide the form, show the Start Game button
+                document.getElementById("entryForm").classList.add("hidden");
+                highlightActiveRow(); // Removes highlight since index is 5
+                document.getElementById("startRollBtn").classList.remove("hidden");
+            }
+        }
+
+        // Phase 1 -> Phase 2
+        function startDiceRoll() {
+            document.getElementById("inputPhase").classList.add("hidden");
+            document.getElementById("rollPhase").classList.remove("hidden");
+            prepNextColumn();
+        }
+
+        // Game Logic
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function prepNextColumn() {
+            if (currentColIdx >= 5) {
+                showResults();
+                return;
+            }
+            document.getElementById("currentColLabel").innerText = columns[currentColIdx].toUpperCase();
+            currentPool = shuffle([...matrixData[currentColIdx]]);
+            rejectedItems = [];
+            document.getElementById("autoLockMsg").classList.add("hidden");
+            drawNextItem();
+        }
+
+        function drawNextItem() {
+            document.getElementById("rollButtons").classList.remove("hidden");
+            document.getElementById("autoLockMsg").classList.add("hidden");
+
+            if (currentPool.length === 1) {
+                currentItem = currentPool.pop();
+                document.getElementById("rolledItem").innerText = currentItem;
+                document.getElementById("autoLockMsg").classList.remove("hidden");
+                document.getElementById("rollButtons").classList.add("hidden");
+                setTimeout(() => { keepItem(true); }, 1500); 
+            } else {
+                currentItem = currentPool.pop();
+                document.getElementById("rolledItem").innerText = currentItem;
+            }
+        }
+
+        function rollAgain() {
+            rejectedItems.push(currentItem);
+            drawNextItem();
+        }
+
+        function keepItem(isAuto = false) {
+            studentScenario.push(currentItem);
+            remainingColumns[currentColIdx] = currentPool.concat(rejectedItems);
+            document.getElementById("storySoFar").innerText = studentScenario.join(" / ");
+            currentColIdx++;
+            prepNextColumn();
+        }
+
+        // Phase 3: Core Results
+        function showResults() {
+            document.getElementById("rollPhase").classList.add("hidden");
+            document.getElementById("resultsPhase").classList.remove("hidden");
+
+            let coreHtml = "<table><tr><th>Plot ID</th>";
+            columns.forEach(col => coreHtml += `<th>${col}</th>`);
+            coreHtml += "</tr>";
+
+            coreHtml += `<tr class="custom-row"><td>⭐ Plot 1 (Custom)</td>`;
+            studentScenario.forEach(item => coreHtml += `<td>${item}</td>`);
+            coreHtml += "</tr>";
+
+            for(let c=0; c<5; c++) remainingColumns[c] = shuffle(remainingColumns[c]);
+
+            for(let r=0; r<4; r++) {
+                coreHtml += `<tr><td>Plot ${r+2}</td>`;
+                for(let c=0; c<5; c++) {
+                    coreHtml += `<td>${remainingColumns[c][r]}</td>`;
+                }
+                coreHtml += "</tr>";
+            }
+            coreHtml += "</table>";
+            document.getElementById("coreTables").innerHTML = coreHtml;
+
+            // Kick off the infinite explorer
+            generateRandomScenarios();
+        }
+
+        // Phase 3: Infinite Explorer
+        function generateRandomScenarios() {
+            let html = document.getElementById("randomTablesContainer").innerHTML;
+            
+            if (randomScenarios.length === 0) {
+                html = "<table id='randomTable'><tr><th>Plot ID</th>";
+                columns.forEach(col => html += `<th>${col}</th>`);
+                html += "</tr>";
+            } else {
+                html = html.replace("</table>", "");
+            }
+
+            for(let i = 0; i < 20; i++) {
+                let plotCount = randomScenarios.length + 1;
+                let newPlot = [];
+                html += `<tr><td>Random ${plotCount}</td>`;
+                
+                for(let c = 0; c < 5; c++) {
+                    let randomIndex = Math.floor(Math.random() * 5);
+                    let randomItem = matrixData[c][randomIndex];
+                    newPlot.push(randomItem);
+                    html += `<td>${randomItem}</td>`;
+                }
+                html += "</tr>";
+                randomScenarios.push(newPlot);
+            }
+            
+            html += "</table>";
+            document.getElementById("randomTablesContainer").innerHTML = html;
+        }
+
+        // Transition from Explorer to Export
+        function finishExploring() {
+            document.getElementById("exploreControls").classList.add("hidden");
+            document.getElementById("exportPhase").classList.remove("hidden");
+        }
+
+        // Phase 4: CSV Export
+        function downloadCSV() {
+            let csv = "# ZWICKY BOX STORY GENERATOR\n# Keis Ohtsuka (c) 2026\n# CC BY NC SA 4.0\n\n";
+            
+            csv += "# CORE SCENARIOS\n";
+            csv += "Plot ID," + columns.join(",") + "\n";
+            csv += "Plot 1 (Custom)," + studentScenario.map(i => `"${i}"`).join(",") + "\n";
+            
+            for(let r=0; r<4; r++) {
+                let row = [`Plot ${r+2}`];
+                for(let c=0; c<5; c++) {
+                    row.push(`"${remainingColumns[c][r]}"`);
+                }
+                csv += row.join(",") + "\n";
+            }
+
+            if (randomScenarios.length > 0) {
+                csv += `\n# RANDOM SCENARIOS (Total: ${randomScenarios.length})\n`;
+                csv += "Plot ID," + columns.join(",") + "\n";
+                randomScenarios.forEach((plot, index) => {
+                    let row = [`Random ${index + 1}`];
+                    plot.forEach(item => row.push(`"${item}"`));
+                    csv += row.join(",") + "\n";
+                });
+            }
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('hidden', '');
+            a.setAttribute('href', url);
+            a.setAttribute('download', 'zwicky_matrix_results.csv');
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // Phase 4: Quit Application
+        function quitApp() {
+            window.close(); 
+            
+            document.getElementById("inputPhase").classList.add("hidden");
+            document.getElementById("rollPhase").classList.add("hidden");
+            document.getElementById("resultsPhase").classList.add("hidden");
+            
+            document.getElementById("quitScreen").classList.remove("hidden");
+            window.scrollTo(0, 0); 
+        }
+    </script>
+</body>
+</html>
