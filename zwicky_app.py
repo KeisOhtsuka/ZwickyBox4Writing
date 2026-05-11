@@ -16,9 +16,9 @@ st.divider()
 if 'phase' not in st.session_state:
     st.session_state.phase = 'input'  
 if 'matrix_data' not in st.session_state:
-    st.session_state.matrix_data = [] # Holds the completed rows securely
+    st.session_state.matrix_data = [] 
 if 'matrix' not in st.session_state:
-    st.session_state.matrix = None # Will hold the final Pandas DataFrame
+    st.session_state.matrix = None 
 if 'student_scenario' not in st.session_state:
     st.session_state.student_scenario = []
 if 'remaining_columns' not in st.session_state:
@@ -31,6 +31,8 @@ if 'rejected_items' not in st.session_state:
     st.session_state.rejected_items = []
 if 'current_roll' not in st.session_state:
     st.session_state.current_roll = None
+if 'show_quit' not in st.session_state:
+    st.session_state.show_quit = False
 
 columns_list = ['Character(s)', 'Setting', 'Objects', 'Crisis', 'Action']
 
@@ -39,12 +41,10 @@ if st.session_state.phase == 'input':
     st.subheader("1. Build Your Matrix")
     st.write("Type your story elements into the boxes below. They will appear in the table once you save the row.")
 
-    # 1. Show the Input Form FIRST (if they haven't finished 5 rows)
     if len(st.session_state.matrix_data) < 5:
         current_row_num = len(st.session_state.matrix_data) + 1
         st.markdown(f"<h3 style='color: #0d47a1;'>📝 Entering Data for Row {current_row_num}</h3>", unsafe_allow_html=True)
         
-        # We use a form so it doesn't refresh until they click the button
         with st.form(key=f"row_form_{current_row_num}"):
             col1, col2, col3, col4, col5 = st.columns(5)
             val1 = col1.text_input("Character(s)")
@@ -56,27 +56,22 @@ if st.session_state.phase == 'input':
             submit_btn = st.form_submit_button(f"Save Row {current_row_num}")
 
             if submit_btn:
-                # Ensure they didn't leave any blanks
                 if all(v.strip() for v in [val1, val2, val3, val4, val5]):
                     st.session_state.matrix_data.append([val1, val2, val3, val4, val5])
-                    st.rerun() # Refresh the page to update the table
+                    st.rerun() 
                 else:
                     st.error("⚠️ Please fill in all 5 columns before saving.")
                     
-    # 2. Show the "Start Game" button if they ARE finished
     else:
         st.success("Matrix complete! Ready to build your scenario.")
         if st.button("🎲 Lock Matrix & Start Dice Roll!", type="primary", use_container_width=True):
-            # Convert the safe list data into the final DataFrame for the rest of the app
             st.session_state.matrix = pd.DataFrame(st.session_state.matrix_data, columns=columns_list)
             st.session_state.phase = 'rolling'
             st.rerun()
 
-    # 3. Display the Table AFTER the form (acting as a live preview)
     st.markdown("### 📊 Matrix Preview")
     display_data = st.session_state.matrix_data + [["", "", "", "", ""] for _ in range(5 - len(st.session_state.matrix_data))]
     
-    # Optional styling to highlight completed rows
     df_display = pd.DataFrame(display_data, columns=columns_list)
     def highlight_filled(s):
         return ['background-color: #f8f9fa' if v == "" else 'background-color: #d4efdf' for v in s]
@@ -100,25 +95,30 @@ elif st.session_state.phase == 'rolling':
         st.session_state.rejected_items = []
 
     if st.session_state.current_roll is None:
-        if len(st.session_state.available_items) == 1:
-            forced_item = st.session_state.available_items.pop(0)
-            st.session_state.student_scenario.append(forced_item)
-            st.session_state.remaining_columns.append(st.session_state.rejected_items)
-            st.warning(f"⚠️ Last option remaining for **{current_col_name}**! Auto-locked: **{forced_item}**")
+        st.session_state.current_roll = st.session_state.available_items.pop(0)
+
+    # Check if this is the final item in the bag
+    is_last_item = (len(st.session_state.available_items) == 0)
+
+    st.info(f"### Rolling for: {current_col_name.upper()}")
+    st.markdown(f"## 🎲 Rolled: **{st.session_state.current_roll}**")
+    
+    if is_last_item:
+        st.warning("⚠️ **Last Option Remaining!** You have rejected all other options, so you must keep this item.")
+        if st.button("✅ Acknowledge & Continue", use_container_width=True, type="primary"):
+            st.session_state.student_scenario.append(st.session_state.current_roll)
+            leftovers = st.session_state.available_items + st.session_state.rejected_items
+            st.session_state.remaining_columns.append(leftovers)
             
             st.session_state.current_col_idx += 1
+            st.session_state.current_roll = None
+            st.session_state.available_items = [] 
+            
             if st.session_state.current_col_idx >= 5:
                 st.session_state.phase = 'results'
             st.rerun()
-        else:
-            st.session_state.current_roll = st.session_state.available_items.pop(0)
-
-    if st.session_state.current_roll is not None:
-        st.info(f"### Rolling for: {current_col_name.upper()}")
-        st.markdown(f"## 🎲 Rolled: **{st.session_state.current_roll}**")
-        
-        col1, col2, col3 = st.columns([1, 1, 2])
-        
+    else:
+        col1, col2 = st.columns(2)
         with col1:
             if st.button("✅ Keep This", use_container_width=True, type="primary"):
                 st.session_state.student_scenario.append(st.session_state.current_roll)
@@ -190,9 +190,10 @@ elif st.session_state.phase == 'results':
         random_df.insert(0, "Plot ID", random_ids)
         st.dataframe(random_df, use_container_width=True, hide_index=True)
 
-        # --- EXPORT TO CSV & RESET/QUIT ---
+        # --- EXPORT TO CSV & SEQUENTIAL EXIT SCREEN ---
         st.divider()
         st.subheader("Save Your Work")
+        st.write("Download your results as a CSV spreadsheet, or press **Ctrl+P** (Windows) / **Cmd+P** (Mac) on your keyboard to instantly print this page as a clean PDF.")
         
         # Build the CSV buffer
         csv_buffer = StringIO()
@@ -210,44 +211,44 @@ elif st.session_state.phase == 'results':
         writer.writerow([f"# RANDOMLY SAMPLED SCENARIOS - Total: {len(st.session_state.random_cases)}"])
         random_df.to_csv(csv_buffer, index=False)
         
-        # Button Layout using columns for a cleaner look
-        col1, col2, col3 = st.columns(3)
+        st.download_button(
+            label="📥 Download Results (CSV)",
+            data=csv_buffer.getvalue(),
+            file_name="zwicky_matrix_results.csv",
+            mime="text/csv"
+        )
         
-        with col1:
-            st.download_button(
-                label="📥 Download Results (CSV)",
-                data=csv_buffer.getvalue(),
-                file_name="zwicky_matrix_results.csv",
-                mime="text/csv",
-                use_container_width=True
-            )
-            
-        with col2:
-            if st.button("🔄 Start Over", use_container_width=True):
-                st.session_state.clear()
-                st.rerun()
-                
-        with col3:
-            if st.button("🚪 Quit", type="primary", use_container_width=True):
-                st.session_state.phase = 'quit'
-                st.rerun()
-                
-    # Reset button (Fallback if they haven't generated random cases)
     st.divider()
-    if st.button("Reset Everything & Start Over"):
-        st.session_state.clear()
-        st.rerun()
+    st.subheader("What's Next?")
+    st.write("Would you like to build a brand new matrix from scratch?")
+    
+    col_y, col_n = st.columns(2)
+    with col_y:
+        if st.button("🔄 Yes, Start Over", use_container_width=True):
+            st.session_state.clear()
+            st.rerun()
+            
+    with col_n:
+        if st.button("🛑 No, I am finished", use_container_width=True):
+            st.session_state.show_quit = True
+            st.rerun()
+            
+    # The Quit warning only appears if they click "No"
+    if st.session_state.show_quit:
+        st.warning("⚠️ **Warning:** If you quit, all your current scenarios will be permanently erased.")
+        if st.button("🚪 Quit Application", type="primary"):
+            st.session_state.phase = 'quit'
+            st.rerun()
 
 # --- PHASE 4: QUIT SCREEN ---
 elif st.session_state.phase == 'quit':
-    st.session_state.clear() # Wipes the memory clean
+    st.session_state.clear() 
     
     st.markdown("<h1 style='text-align: center; color: #2c3e50;'>Goodbye! 👋</h1>", unsafe_allow_html=True)
     st.markdown("<h3 style='text-align: center;'>Thank you for using the Zwicky Box Story Generator.</h3>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #7f8c8d;'>Your session has ended and your data has been cleared. You can now safely close this browser tab.</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #7f8c8d;'>Your session has ended and your data has been securely cleared. You can now safely close this browser tab.</p>", unsafe_allow_html=True)
     st.divider()
     
-    # Just in case they clicked it by accident
     col1, col2, col3 = st.columns([1, 1, 1])
     with col2:
         if st.button("Wait, take me back! (Start Over)", use_container_width=True):
