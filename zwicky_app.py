@@ -183,33 +183,47 @@ elif st.session_state.phase == 'results':
         random_df.insert(0, "Plot ID", random_ids)
         st.dataframe(random_df, use_container_width=True, hide_index=True)
 
-        # --- EXPORT TO CSV ---
+       # --- EXPORT TO CSV & RESET/QUIT ---
         st.divider()
         st.subheader("Save Your Work")
         
+        # Build the CSV buffer (Keep your existing CSV logic here)
         csv_buffer = StringIO()
         writer = csv.writer(csv_buffer)
-        
         writer.writerow(["# ZWICKY BOX STORY GENERATOR (Classroom Edition)"])
         writer.writerow(["# developed by Keis Ohtsuka (c) 2026 using Google Gemini Pro."])
         writer.writerow(["# Creative Commons Attribution NonCommercial ShareAlike licence: CC BY NC SA 4.0"])
         writer.writerow([])
         writer.writerow(["# ORIGINAL ZWICKY MATRIX"])
         st.session_state.matrix.to_csv(csv_buffer, index=False)
-        
         writer.writerow([])
         writer.writerow(["# THE 5 CORE SCENARIOS (Without Replacement)"])
         st.session_state.core_df.to_csv(csv_buffer, index=False)
-            
         writer.writerow([])
         writer.writerow([f"# RANDOMLY SAMPLED SCENARIOS - Total: {len(st.session_state.random_cases)}"])
         random_df.to_csv(csv_buffer, index=False)
         
-        st.download_button(
-            label="📥 Download Results (CSV)",
-            data=csv_buffer.getvalue(),
-            file_name="zwicky_matrix_results.csv",
-            mime="text/csv"
+        # Button Layout using columns for a cleaner look
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.download_button(
+                label="📥 Download Results (CSV)",
+                data=csv_buffer.getvalue(),
+                file_name="zwicky_matrix_results.csv",
+                mime="text/csv",
+                use_container_width=True
+            )
+            
+        with col2:
+            if st.button("🔄 Start Over", use_container_width=True):
+                st.session_state.clear()
+                st.rerun()
+                
+        with col3:
+            if st.button("🚪 Quit", type="primary", use_container_width=True):
+                st.session_state.phase = 'quit'
+                st.rerun()
         )
         
     # Reset button 
