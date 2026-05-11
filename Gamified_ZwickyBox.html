@@ -319,6 +319,19 @@
             a.click();
             document.body.removeChild(a);
         }
+        // Phase 4: Quit Application
+        function quitApp() {
+            // Attempt to close the window (works in some specific browser setups)
+            window.close(); 
+            
+            // If the browser blocks window.close(), show the Goodbye screen instead
+            document.getElementById("inputPhase").classList.add("hidden");
+            document.getElementById("rollPhase").classList.add("hidden");
+            document.getElementById("resultsPhase").classList.add("hidden");
+            
+            document.getElementById("quitScreen").classList.remove("hidden");
+            window.scrollTo(0, 0); // Scroll to the top of the page
+        }
     </script>
 </body>
 </html>
