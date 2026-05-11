@@ -97,7 +97,6 @@ elif st.session_state.phase == 'rolling':
     if st.session_state.current_roll is None:
         st.session_state.current_roll = st.session_state.available_items.pop(0)
 
-    # Check if this is the final item in the bag
     is_last_item = (len(st.session_state.available_items) == 0)
 
     st.info(f"### Rolling for: {current_col_name.upper()}")
@@ -190,20 +189,15 @@ elif st.session_state.phase == 'results':
         random_df.insert(0, "Plot ID", random_ids)
         st.dataframe(random_df, use_container_width=True, hide_index=True)
 
-        # --- EXPORT TO CSV & SEQUENTIAL EXIT SCREEN ---
+        # --- EXPORT TO CSV & PRINT PDF ---
         st.divider()
         st.subheader("Save Your Work")
-        st.write("Download your results as a CSV spreadsheet, or press **Ctrl+P** (Windows) / **Cmd+P** (Mac) on your keyboard to instantly print this page as a clean PDF.")
         
-        # Build the CSV buffer
+        # 1. Build the CSV Download
         csv_buffer = StringIO()
         writer = csv.writer(csv_buffer)
         writer.writerow(["# ZWICKY BOX STORY GENERATOR (Classroom Edition)"])
         writer.writerow(["# developed by Keis Ohtsuka (c) 2026 using Google Gemini Pro."])
-        writer.writerow(["# Creative Commons Attribution NonCommercial ShareAlike licence: CC BY NC SA 4.0"])
-        writer.writerow([])
-        writer.writerow(["# ORIGINAL ZWICKY MATRIX"])
-        st.session_state.matrix.to_csv(csv_buffer, index=False)
         writer.writerow([])
         writer.writerow(["# THE 5 CORE SCENARIOS (Without Replacement)"])
         st.session_state.core_df.to_csv(csv_buffer, index=False)
@@ -211,32 +205,58 @@ elif st.session_state.phase == 'results':
         writer.writerow([f"# RANDOMLY SAMPLED SCENARIOS - Total: {len(st.session_state.random_cases)}"])
         random_df.to_csv(csv_buffer, index=False)
         
-        st.download_button(
-            label="📥 Download Results (CSV)",
-            data=csv_buffer.getvalue(),
-            file_name="zwicky_matrix_results.csv",
-            mime="text/csv"
-        )
+        # 2. Build the HTML Printable Report (Triggers PDF Print Automatically)
+        html_report = f"""
+        <html><head><title>Zwicky Box Results</title>
+        <style>body {{ font-family: sans-serif; padding: 20px; }} table {{ border-collapse: collapse; width: 100%; margin-bottom: 30px; }} th, td {{ border: 1px solid #ccc; padding: 8px; text-align: left; }} th {{ background-color: #eee; }}</style>
+        </head><body onload="window.print()">
+        <h2>Zwicky Box Story Generator - Results</h2>
+        <p><i>Developed by Keis Ohtsuka (c) 2026</i></p>
+        <h3>Core Scenarios</h3>
+        {st.session_state.core_df.to_html(index=False)}
+        <h3>Random Scenarios</h3>
+        {random_df.to_html(index=False)}
+        </body></html>
+        """
+
+        col1, col2 = st.columns(2)
+        with col1:
+            st.download_button(
+                label="📊 Download as CSV Spreadsheet",
+                data=csv_buffer.getvalue(),
+                file_name="zwicky_results.csv",
+                mime="text/csv",
+                use_container_width=True
+            )
+        with col2:
+            st.download_button(
+                label="🖨️ Download Printable PDF Report",
+                data=html_report,
+                file_name="Zwicky_Printable_Report.html",
+                mime="text/html",
+                use_container_width=True,
+                help="Clicking this will download a file. Open it, and it will automatically open your computer's Print menu!"
+            )
         
+    # --- EXIT FLOW ---
     st.divider()
-    st.subheader("What's Next?")
-    st.write("Would you like to build a brand new matrix from scratch?")
+    st.subheader("Are you finished?")
     
-    col_y, col_n = st.columns(2)
-    with col_y:
-        if st.button("🔄 Yes, Start Over", use_container_width=True):
+    col_n, col_y = st.columns(2)
+    with col_n:
+        if st.button("🔄 No, Start Over", use_container_width=True):
             st.session_state.clear()
             st.rerun()
             
-    with col_n:
-        if st.button("🛑 No, I am finished", use_container_width=True):
+    with col_y:
+        if st.button("✅ Yes, I am done", use_container_width=True):
             st.session_state.show_quit = True
             st.rerun()
             
-    # The Quit warning only appears if they click "No"
+    # The Quit warning only appears if they say they are done
     if st.session_state.show_quit:
-        st.warning("⚠️ **Warning:** If you quit, all your current scenarios will be permanently erased.")
-        if st.button("🚪 Quit Application", type="primary"):
+        st.warning("⚠️ **Clicking Quit will permanently erase your current scenarios.** Please make sure you have saved or printed them!")
+        if st.button("🚪 Confirm & Quit Application", type="primary"):
             st.session_state.phase = 'quit'
             st.rerun()
 
@@ -247,9 +267,3 @@ elif st.session_state.phase == 'quit':
     st.markdown("<h1 style='text-align: center; color: #2c3e50;'>Goodbye! 👋</h1>", unsafe_allow_html=True)
     st.markdown("<h3 style='text-align: center;'>Thank you for using the Zwicky Box Story Generator.</h3>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; color: #7f8c8d;'>Your session has ended and your data has been securely cleared. You can now safely close this browser tab.</p>", unsafe_allow_html=True)
-    st.divider()
-    
-    col1, col2, col3 = st.columns([1, 1, 1])
-    with col2:
-        if st.button("Wait, take me back! (Start Over)", use_container_width=True):
-            st.rerun()
