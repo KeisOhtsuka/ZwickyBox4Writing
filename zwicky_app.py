@@ -231,3 +231,17 @@ elif st.session_state.phase == 'results':
     if st.button("Reset Everything & Start Over"):
         st.session_state.clear()
         st.rerun()
+        # --- PHASE 4: QUIT SCREEN ---
+elif st.session_state.phase == 'quit':
+    st.session_state.clear() # Wipes the memory clean
+    
+    st.markdown("<h1 style='text-align: center; color: #2c3e50;'>Goodbye! 👋</h1>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center;'>Thank you for using the Zwicky Box Story Generator.</h3>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #7f8c8d;'>Your session has ended and your data has been cleared. You can now safely close this browser tab.</p>", unsafe_allow_html=True)
+    st.divider()
+    
+    # Just in case they clicked it by accident
+    col1, col2, col3 = st.columns([1, 1, 1])
+    with col2:
+        if st.button("Wait, take me back! (Start Over)", use_container_width=True):
+            st.rerun()
