@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zwicky Box Story Generator</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: 20px auto; padding: 20px; color: #333; line-height: 1.6; }
+        h1 { color: #2c3e50; margin-bottom: 5px; }
+        .credits { font-size: 13px; color: #7f8c8d; font-style: italic; margin-bottom: 30px; }
+        .panel { background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #dee2e6; margin-bottom: 20px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; background: white; font-size: 14px; }
+        th, td { border: 1px solid #ced4da; padding: 10px; text-align: left; width: 20%; word-wrap: break-word; }
+        th { background-color: #e9ecef; }
+        
+        .input-row-container { background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #90caf9; }
+        .input-flex { display: flex; gap: 10px; margin-bottom: 15px; }
+        .input-flex input { flex: 1; padding: 10px; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; }
+        .active-table-row { background-color: #fff3cd !important; }
+        
+        .load-box { background: #e8f4f8; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 2px dashed #3498db; text-align: center; }
+        
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; margin: 5px; }
+        button:hover { background: #0056b3; }
+        .btn-success { background: #28a745; }
+        .btn-success:hover { background: #218838; }
+        .btn-warning { background: #ffc107; color: black; }
+        .btn-warning:hover { background: #e0a800; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-secondary { background: #6c757d; }
+        .btn-secondary:hover { background: #5a6268; }
+        .btn-info { background: #17a2b8; color: white; }
+        .btn-info:hover { background: #138496; }
+        
+        .hidden { display: none !important; }
+        .dice-roll-box { text-align: center; padding: 30px; background: #e3f2fd; border: 2px dashed #90caf9; border-radius: 10px; }
+        .dice-result { font-size: 24px; font-weight: bold; color: #1565c0; margin: 20px 0; }
+        .custom-row { background-color: #d4efdf !important; border: 2px solid #27ae60; }
+        .character-row { background-color: #e8f4f8 !important; font-weight: bold; border-left: 4px solid #3498db; }
+        
+        @media print { 
+            .no-print { display: none !important; } 
+            body { margin: 0; } 
+            table { page-break-inside: auto; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🎲 Zwicky Box Story Generator</h1>
+    <div class="credits">
+        Developed by Keis Ohtsuka (c) 2026 using Google Gemini Pro.<br>
+        Creative Commons Attribution NonCommercial ShareAlike licence: CC BY NC SA 4.0
+    </div>
+
+    <!-- PHASE 1: INPUT & LOAD -->
+    <div id="inputPhase" class="panel no-print">
+        
+        <div class="load-box">
+            <h3 style="margin-top: 0; color: #2c3e50;">📂 Load a Saved Scenario</h3>
+            <p>If you have a previously saved <strong>MyScenario</strong> file, upload it here to pick up right where you left off!</p>
+            <input type="file" id="loadFileInput" accept=".json" onchange="loadProject(event)" style="font-size: 16px;">
+        </div>
+
+        <h2>1. Build Your Matrix</h2>
+        <p>Or, start fresh by typing your story elements into the boxes below.</p>
+
+        <div id="entryForm" class="input-row-container">
+            <h3 id="rowHeader" style="margin-top: 0; color: #0d47a1;">📝 Entering Data for Row 1</h3>
+            <div class="input-flex">
+                <input type="text" id="input_0" placeholder="Character(s)" oninput="updateTableLive(0)">
+                <input type="text" id="input_1" placeholder="Setting" oninput="updateTableLive(1)">
+                <input type="text" id="input_2" placeholder="Objects" oninput="updateTableLive(2)">
+                <input type="text" id="input_3" placeholder="Crisis" oninput="updateTableLive(3)">
+                <input type="text" id="input_4" placeholder="Action" oninput="updateTableLive(4)">
+            </div>
+            <button class="btn-success" onclick="saveRow()">💾 Save Row</button>
+            <span id="rowErrorMsg" style="color: red; font-weight: bold; margin-left: 15px;" class="hidden">⚠️ Please fill in all 5 boxes!</span>
+        </div>
+
+        <table id="matrixTable">
+            <thead>
+                <tr>
+                    <th>Character(s)</th><th>Setting</th><th>Objects</th><th>Crisis</th><th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="matrixBody"></tbody>
+        </table>
+        
+        <div style="text-align: center;">
+            <button id="startSetupBtn" class="hidden" style="font-size: 18px; padding: 15px 30px;" onclick="startSetup()">🎲 Lock Matrix & Setup Story</button>
+        </div>
+    </div>
+
+    <!-- PHASE 1.5: MULTI-CHARACTER SETUP -->
+    <div id="setupPhase" class="panel hidden no-print" style="text-align: center;">
+        <h2>2. Story Setup</h2>
+        <p style="font-size: 18px;">How many primary characters will have interwoven storylines? (1 to 5)</p>
+        <input type="number" id="numCharsInput" min="1" max="5" value="1" style="font-size: 20px; padding: 10px; width: 80px; text-align: center;">
+        <br><br>
+        <button class="btn-success" onclick="confirmCharacterCount()">Start Building</button>
+    </div>
+
+    <div id="characterChoicePhase" class="panel hidden no-print" style="text-align: center;">
+        <h2 id="charSetupTitle">Setup Character 1</h2>
+        <p>Would you like to manually roll the storyline for this character, or auto-randomize it?</p>
+        <button class="btn-success" onclick="startManualRoll()">🎲 Manually Roll</button>
+        <button class="btn-warning" onclick="autoRandomizeCharacter()">⚡ Auto-Randomize</button>
+    </div>
+
+    <!-- PHASE 2: MANUAL DICE ROLL -->
+    <div id="rollPhase" class="panel hidden no-print">
+        <h2 id="rollPhaseTitle">Building Scenario</h2>
+        <p>Rolling for: <strong id="currentColLabel"></strong></p>
+        
+        <div class="dice-roll-box">
+            <div id="autoLockMsg" class="hidden" style="color: #d35400; font-weight: bold; margin-bottom: 10px;">
+                ⚠️ Last option remaining! Auto-locking...
+            </div>
+            <div class="dice-result" id="rolledItem">???</div>
+            <div id="rollButtons">
+                <button class="btn-success" onclick="keepItem()">✅ Keep This</button>
+                <button class="btn-warning" onclick="rollAgain()">🔄 Roll Again</button>
+            </div>
+        </div>
+        
+        <h3 style="margin-top: 30px;">Story So Far:</h3>
+        <p id="storySoFar" style="font-size: 18px; font-weight: bold; color: #2c3e50;">(Nothing locked in yet)</p>
+    </div>
+
+    <!-- PHASE 3: RESULTS & INFINITE EXPLORER -->
+    <div id="resultsPhase" class="hidden">
+        <h2 style="color: #27ae60;">🎉 Your Core Scenarios are Complete!</h2>
+        <p id="autoSaveMsg" style="color: #e67e22; font-style: italic; font-weight: bold;">(Your results have been automatically exported as a CSV)</p>
+        
+        <h3>Your Original Zwicky Matrix</h3>
+        <div id="originalMatrixTable"></div>
+        
+        <!-- NEW TEXT FOR REPLACEMENT EXPLANATION -->
+        <h3>The 5 Core Scenarios (Without replacement, avoiding overlap)</h3>
+        <p class="no-print">Highlighted rows are your primary character storylines. The remaining rows use the leftover elements.</p>
+        <div id="coreTables"></div>
+
+        <div id="explorerSection" style="margin-top: 40px;">
+            <!-- NEW TEXT FOR REPLACEMENT EXPLANATION -->
+            <h3>Explore Random Scenarios (With replacement, allowing using the same keywords more than once)</h3>
+            <div id="randomTablesContainer"></div>
+            
+            <div id="exploreControls" class="no-print" style="margin-top: 20px; text-align: center; background: #fff3cd; padding: 20px; border-radius: 8px;">
+                <p>Do you want to see more randomly generated plots?</p>
+                <button onclick="generateRandomScenarios()">✨ Generate 5 More</button>
+                <button class="btn-danger" onclick="finishExploring()">🛑 No, Done Exploring</button>
+            </div>
+        </div>
+
+        <!-- PHASE 4: EXPORT / PRINT / RESET / QUIT -->
+        <div id="exportPhase" class="no-print hidden" style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #eee; text-align: center;">
+            <h3 style="color: #2c3e50;">Save Your Work</h3>
+            <p>Save a Scenario File to pick up right where you left off later, or download a final CSV/PDF.</p>
+            
+            <button style="background: #8e44ad; color: white;" onclick="saveProject()">💾 Save Scenario File (.json)</button>
+            <button class="btn-success" onclick="downloadCSV(false)">📥 Download Results as CSV</button>
+            <button onclick="window.print()">🖨️ Print to PDF</button>
+            <br><br>
+            <!-- NEW: REUSE MATRIX BUTTON -->
+            <button class="btn-info" onclick="reuseMatrix()">🎲 Reuse Matrix for New Stories</button>
+            <button class="btn-warning" onclick="location.reload()">🔄 Start Completely Over</button>
+            <button class="btn-secondary" onclick="quitApp()">🚪 Quit</button>
+        </div>
+    </div>
+
+    <!-- QUIT SCREEN -->
+    <div id="quitScreen" class="panel hidden no-print" style="text-align: center; margin-top: 50px;">
+        <h2 style="color: #2c3e50;">Goodbye! 👋</h2>
+        <p style="font-size: 18px;">Thank you for using the Zwicky Box Story Generator.</p>
+        <p style="color: #7f8c8d;">Your session has ended. You can now safely close this browser tab.</p>
+    </div>
+
+    <script>
+        const columns = ['Character(s)', 'Setting', 'Objects', 'Crisis', 'Action'];
+        let matrixData = [[], [], [], [], []]; 
+        
+        let currentRowIdx = 0;
+        let numCharacters = 1;
+        let currentCharIdx = 0; 
+        let globalBag = [[], [], [], [], []]; 
+        let coreScenarios = []; 
+        let tempScenario = []; 
+        
+        let currentColIdx = 0;
+        let currentPool = [];
+        let rejectedItems = [];
+        let currentItem = "";
+        
+        let randomScenarios = [];
+
+        window.onload = () => {
+            const tbody = document.getElementById("matrixBody");
+            for(let r=0; r<5; r++) {
+                let tr = document.createElement("tr");
+                tr.id = `row_${r}`;
+                for(let c=0; c<5; c++) {
+                    tr.innerHTML += `<td id="cell_${c}_${r}"></td>`;
+                }
+                tbody.appendChild(tr);
+            }
+            highlightActiveRow();
+            document.getElementById("input_0").focus(); 
+        };
+
+        function highlightActiveRow() {
+            for(let r=0; r<5; r++) {
+                let rowElement = document.getElementById(`row_${r}`);
+                if (rowElement) {
+                    if (r === currentRowIdx) rowElement.classList.add("active-table-row");
+                    else rowElement.classList.remove("active-table-row");
+                }
+            }
+        }
+
+        function updateTableLive(colIdx) {
+            if (currentRowIdx < 5) {
+                const val = document.getElementById(`input_${colIdx}`).value;
+                document.getElementById(`cell_${colIdx}_${currentRowIdx}`).innerText = val;
+            }
+        }
+
+        function saveRow() {
+            let allFilled = true;
+            let rowValues = [];
+            for(let c=0; c<5; c++) {
+                let val = document.getElementById(`input_${c}`).value.trim();
+                if(val === "") allFilled = false;
+                rowValues.push(val);
+            }
+
+            if(!allFilled) {
+                document.getElementById("rowErrorMsg").classList.remove("hidden");
+                return;
+            }
+            
+            document.getElementById("rowErrorMsg").classList.add("hidden");
+
+            for(let c=0; c<5; c++) {
+                matrixData[c][currentRowIdx] = rowValues[c];
+            }
+
+            currentRowIdx++;
+
+            if (currentRowIdx < 5) {
+                for(let c=0; c<5; c++) {
+                    document.getElementById(`input_${c}`).value = "";
+                }
+                document.getElementById("rowHeader").innerText = `📝 Entering Data for Row ${currentRowIdx + 1}`;
+                highlightActiveRow();
+                document.getElementById("input_0").focus();
+            } else {
+                document.getElementById("entryForm").classList.add("hidden");
+                highlightActiveRow(); 
+                document.getElementById("startSetupBtn").classList.remove("hidden");
+            }
+        }
+
+        function startSetup() {
+            document.getElementById("inputPhase").classList.add("hidden");
+            document.getElementById("setupPhase").classList.remove("hidden");
+        }
+
+        function confirmCharacterCount() {
+            let val = parseInt(document.getElementById("numCharsInput").value);
+            if(val >= 1 && val <= 5) {
+                numCharacters = val;
+                for(let c=0; c<5; c++) {
+                    globalBag[c] = [...matrixData[c]];
+                }
+                document.getElementById("setupPhase").classList.add("hidden");
+                processNextCharacter();
+            } else {
+                alert("Please enter a number between 1 and 5.");
+            }
+        }
+
+        function processNextCharacter() {
+            if (currentCharIdx < numCharacters) {
+                document.getElementById("charSetupTitle").innerText = `Storyline for Character ${currentCharIdx + 1}`;
+                document.getElementById("characterChoicePhase").classList.remove("hidden");
+            } else {
+                buildLeftoverScenarios();
+            }
+        }
+
+        function autoRandomizeCharacter() {
+            document.getElementById("characterChoicePhase").classList.add("hidden");
+            tempScenario = [];
+            
+            for(let c=0; c<5; c++) {
+                let randIndex = Math.floor(Math.random() * globalBag[c].length);
+                let item = globalBag[c][randIndex];
+                tempScenario.push(item);
+                globalBag[c].splice(randIndex, 1);
+            }
+            
+            coreScenarios.push({ id: `Character ${currentCharIdx + 1}`, plot: tempScenario, isCharacter: true });
+            currentCharIdx++;
+            processNextCharacter();
+        }
+
+        function startManualRoll() {
+            document.getElementById("characterChoicePhase").classList.add("hidden");
+            document.getElementById("rollPhase").classList.remove("hidden");
+            document.getElementById("rollPhaseTitle").innerText = `Building Character ${currentCharIdx + 1}`;
+            
+            tempScenario = [];
+            currentColIdx = 0;
+            document.getElementById("storySoFar").innerText = "(Nothing locked in yet)";
+            prepNextColumn();
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function prepNextColumn() {
+            if (currentColIdx >= 5) {
+                coreScenarios.push({ id: `Character ${currentCharIdx + 1}`, plot: tempScenario, isCharacter: true });
+                document.getElementById("rollPhase").classList.add("hidden");
+                currentCharIdx++;
+                processNextCharacter();
+                return;
+            }
+            
+            document.getElementById("currentColLabel").innerText = columns[currentColIdx].toUpperCase();
+            currentPool = shuffle([...globalBag[currentColIdx]]);
+            rejectedItems = [];
+            document.getElementById("autoLockMsg").classList.add("hidden");
+            drawNextItem();
+        }
+
+        function drawNextItem() {
+            document.getElementById("rollButtons").classList.remove("hidden");
+            document.getElementById("autoLockMsg").classList.add("hidden");
+
+            if (currentPool.length === 1) {
+                currentItem = currentPool.pop();
+                document.getElementById("rolledItem").innerText = currentItem;
+                document.getElementById("autoLockMsg").classList.remove("hidden");
+                document.getElementById("rollButtons").classList.add("hidden");
+                setTimeout(() => { keepItem(true); }, 1500); 
+            } else {
+                currentItem = currentPool.pop();
+                document.getElementById("rolledItem").innerText = currentItem;
+            }
+        }
+
+        function rollAgain() {
+            rejectedItems.push(currentItem);
+            drawNextItem();
+        }
+
+        function keepItem(isAuto = false) {
+            tempScenario.push(currentItem);
+            globalBag[currentColIdx] = currentPool.concat(rejectedItems);
+            document.getElementById("storySoFar").innerText = tempScenario.join(" / ");
+            currentColIdx++;
+            prepNextColumn();
+        }
+
+        function buildLeftoverScenarios() {
+            let numLeftovers = 5 - numCharacters;
+            for(let c=0; c<5; c++) { globalBag[c] = shuffle(globalBag[c]); }
+            
+            for(let r=0; r < numLeftovers; r++) {
+                let unusedPlot = [];
+                for(let c=0; c<5; c++) { unusedPlot.push(globalBag[c][r]); }
+                coreScenarios.push({ id: `Unused Plot ${r + 1}`, plot: unusedPlot, isCharacter: false });
+            }
+            
+            showResults();
+            downloadCSV(true); 
+        }
+
+        function renderTables() {
+            let origHtml = "<table><tr>";
+            columns.forEach(col => origHtml += `<th>${col}</th>`);
+            origHtml += "</tr>";
+            for(let r=0; r<5; r++) {
+                origHtml += "<tr>";
+                for(let c=0; c<5; c++) { origHtml += `<td>${matrixData[c][r]}</td>`; }
+                origHtml += "</tr>";
+            }
+            origHtml += "</table>";
+            document.getElementById("originalMatrixTable").innerHTML = origHtml;
+
+            let coreHtml = "<table><tr><th>Plot ID</th>";
+            columns.forEach(col => coreHtml += `<th>${col}</th>`);
+            coreHtml += "</tr>";
+
+            coreScenarios.forEach(scenario => {
+                let rowClass = scenario.isCharacter ? "character-row" : "";
+                coreHtml += `<tr class="${rowClass}"><td>${scenario.isCharacter ? "⭐ " : ""}${scenario.id}</td>`;
+                scenario.plot.forEach(item => { coreHtml += `<td>${item}</td>`; });
+                coreHtml += "</tr>";
+            });
+            coreHtml += "</table>";
+            document.getElementById("coreTables").innerHTML = coreHtml;
+            
+            if (randomScenarios.length > 0) {
+                let randHtml = "<table id='randomTable'><tr><th>Plot ID</th>";
+                columns.forEach(col => randHtml += `<th>${col}</th>`);
+                randHtml += "</tr>";
+                
+                randomScenarios.forEach((plot, index) => {
+                    randHtml += `<tr><td>Random ${index + 1}</td>`;
+                    plot.forEach(item => { randHtml += `<td>${item}</td>`; });
+                    randHtml += "</tr>";
+                });
+                randHtml += "</table>";
+                document.getElementById("randomTablesContainer").innerHTML = randHtml;
+            } else {
+                document.getElementById("randomTablesContainer").innerHTML = "";
+            }
+        }
+
+        function showResults() {
+            document.getElementById("resultsPhase").classList.remove("hidden");
+            renderTables();
+            generateRandomScenarios(); 
+        }
+
+        function generateRandomScenarios() {
+            for(let i = 0; i < 5; i++) {
+                let newPlot = [];
+                for(let c = 0; c < 5; c++) {
+                    let randomIndex = Math.floor(Math.random() * 5);
+                    newPlot.push(matrixData[c][randomIndex]);
+                }
+                randomScenarios.push(newPlot);
+            }
+            renderTables();
+        }
+
+        function finishExploring() {
+            document.getElementById("exploreControls").classList.add("hidden");
+            document.getElementById("exportPhase").classList.remove("hidden");
+            document.getElementById("autoSaveMsg").classList.add("hidden"); 
+        }
+
+        function saveProject() {
+            let saveCount = localStorage.getItem('zwickySaveCount') || 1;
+            let filename = `MyScenario_${saveCount}.json`;
+            
+            let projectData = {
+                matrixData: matrixData,
+                coreScenarios: coreScenarios,
+                randomScenarios: randomScenarios,
+                numCharacters: numCharacters
+            };
+            
+            let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projectData));
+            let anchor = document.createElement('a');
+            anchor.setAttribute("href", dataStr);
+            anchor.setAttribute("download", filename);
+            document.body.appendChild(anchor);
+            anchor.click();
+            anchor.remove();
+            
+            localStorage.setItem('zwickySaveCount', parseInt(saveCount) + 1);
+            alert(`Saved as ${filename}`);
+        }
+
+        // --- UPDATED: INTELLIGENT LOAD LOGIC ---
+        function loadProject(event) {
+            let file = event.target.files[0];
+            if (!file) return;
+            
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    let parsedData = JSON.parse(e.target.result);
+                    
+                    matrixData = parsedData.matrixData;
+                    coreScenarios = parsedData.coreScenarios;
+                    randomScenarios = parsedData.randomScenarios || [];
+                    numCharacters = parsedData.numCharacters || 1;
+                    
+                    // Ask the user what they want to do with the loaded file
+                    let viewResults = confirm("Scenario loaded successfully!\n\nClick [OK] to view your saved stories.\nClick [Cancel] to generate brand new stories using this matrix.");
+                    
+                    if (viewResults) {
+                        document.getElementById("inputPhase").classList.add("hidden");
+                        document.getElementById("setupPhase").classList.add("hidden");
+                        document.getElementById("characterChoicePhase").classList.add("hidden");
+                        document.getElementById("resultsPhase").classList.remove("hidden");
+                        document.getElementById("autoSaveMsg").classList.add("hidden");
+                        
+                        renderTables();
+                    } else {
+                        reuseMatrix();
+                    }
+                    
+                } catch (err) {
+                    alert("Error: Invalid MyScenario file.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // --- NEW: REUSE MATRIX FUNCTION ---
+        function reuseMatrix() {
+            coreScenarios = [];
+            randomScenarios = [];
+            currentCharIdx = 0;
+            globalBag = [[], [], [], [], []];
+            
+            // Rebuild matrix table in Phase 1 to show what they are reusing
+            const tbody = document.getElementById("matrixBody");
+            tbody.innerHTML = "";
+            for(let r=0; r<5; r++) {
+                let tr = document.createElement("tr");
+                tr.id = `row_${r}`;
+                for(let c=0; c<5; c++) {
+                    tr.innerHTML += `<td id="cell_${c}_${r}">${matrixData[c][r]}</td>`;
+                }
+                tbody.appendChild(tr);
+            }
+            
+            currentRowIdx = 5; // Trick the UI into thinking the input is already finished
+            
+            // Hide everything else and route to Phase 1 Setup
+            document.getElementById("resultsPhase").classList.add("hidden");
+            document.getElementById("exportPhase").classList.add("hidden");
+            document.getElementById("exploreControls").classList.remove("hidden");
+            document.getElementById("autoSaveMsg").classList.remove("hidden");
+            
+            document.getElementById("inputPhase").classList.remove("hidden");
+            document.getElementById("entryForm").classList.add("hidden");
+            document.getElementById("startSetupBtn").classList.remove("hidden");
+            
+            window.scrollTo(0, 0);
+        }
+
+        function downloadCSV(isAutoSave) {
+            let csv = "# ZWICKY BOX STORY GENERATOR\n# Keis Ohtsuka (c) 2026\n# CC BY NC SA 4.0\n\n";
+            
+            csv += "# ORIGINAL MATRIX\n";
+            csv += columns.join(",") + "\n";
+            for(let r=0; r<5; r++) {
+                let row = [];
+                for(let c=0; c<5; c++) { row.push(`"${matrixData[c][r]}"`); }
+                csv += row.join(",") + "\n";
+            }
+            csv += "\n";
+            
+            // NEW TEXT ADDED HERE
+            csv += "# THE 5 CORE SCENARIOS (Without replacement, avoiding overlap)\n";
+            csv += "Plot ID," + columns.join(",") + "\n";
+            
+            coreScenarios.forEach(scenario => {
+                let row = [`"${scenario.id}"`];
+                scenario.plot.forEach(item => row.push(`"${item}"`));
+                csv += row.join(",") + "\n";
+            });
+
+            if (randomScenarios.length > 0) {
+                // NEW TEXT ADDED HERE
+                csv += `\n# RANDOM SCENARIOS (With replacement, allowing using the same keywords more than once) - Total: ${randomScenarios.length}\n`;
+                csv += "Plot ID," + columns.join(",") + "\n";
+                randomScenarios.forEach((plot, index) => {
+                    let row = [`Random ${index + 1}`];
+                    plot.forEach(item => row.push(`"${item}"`));
+                    csv += row.join(",") + "\n";
+                });
+            }
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('hidden', '');
+            a.setAttribute('href', url);
+            
+            if (isAutoSave) {
+                a.setAttribute('download', 'zwicky_autosave.csv');
+            } else {
+                a.setAttribute('download', 'zwicky_final_results.csv');
+            }
+            
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function quitApp() {
+            window.close(); 
+            document.getElementById("inputPhase").classList.add("hidden");
+            document.getElementById("setupPhase").classList.add("hidden");
+            document.getElementById("characterChoicePhase").classList.add("hidden");
+            document.getElementById("rollPhase").classList.add("hidden");
+            document.getElementById("resultsPhase").classList.add("hidden");
+            
+            document.getElementById("quitScreen").classList.remove("hidden");
+            window.scrollTo(0, 0); 
+        }
+    </script>
+</body>
+</html>

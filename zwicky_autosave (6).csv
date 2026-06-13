@@ -1,0 +1,27 @@
+# ZWICKY BOX STORY GENERATOR
+# Keis Ohtsuka (c) 2026
+# CC BY NC SA 4.0
+
+# ORIGINAL MATRIX
+Character(s),Setting,Objects,Crisis,Action
+"psychologist","office","bouque by door","positive transfer","runs away"
+"ex-lover","hotel room","lingerie","amnesia","embrace"
+"Jazz musician","airport","saxophone","flight cancellation","cry"
+"police","cemetery","sofa","murder","arrest"
+"three friends","bar","smartphones","holiday planning","make calls"
+
+# THE 5 CORE SCENARIOS (Without replacement, avoiding overlap)
+Plot ID,Character(s),Setting,Objects,Crisis,Action
+"Character 1","psychologist","cemetery","sofa","positive transfer","runs away"
+"Character 2","police","airport","saxophone","flight cancellation","make calls"
+"Character 3","Jazz musician","office","lingerie","amnesia","embrace"
+"Unused Plot 1","three friends","hotel room","bouque by door","holiday planning","cry"
+"Unused Plot 2","ex-lover","bar","smartphones","murder","arrest"
+
+# RANDOM SCENARIOS (With replacement, allowing using the same keywords more than once) - Total: 5
+Plot ID,Character(s),Setting,Objects,Crisis,Action
+Random 1,"Jazz musician","cemetery","sofa","amnesia","runs away"
+Random 2,"ex-lover","cemetery","sofa","flight cancellation","make calls"
+Random 3,"police","hotel room","bouque by door","flight cancellation","arrest"
+Random 4,"ex-lover","airport","sofa","holiday planning","runs away"
+Random 5,"ex-lover","bar","sofa","flight cancellation","runs away"
